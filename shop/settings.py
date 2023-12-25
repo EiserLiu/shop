@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -142,26 +141,30 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
     ),
     # 配置DRF使用的过滤器
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend',]
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend', ],
+    # 配置限流频率
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '1/minute'
+    }
 }
 
 # token的相关配置
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),   # 访问令牌的有效时间
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),     # 刷新令牌的有效时间
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),  # 访问令牌的有效时间
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # 刷新令牌的有效时间
 
-    "ROTATE_REFRESH_TOKENS": False,     # 若为True, 则刷新后新的refresh_token有更新的有效时间
-    "BLACKLIST_AFTER_ROTATION": True,   # 若为True, 刷新后的token将添加到黑名单中
+    "ROTATE_REFRESH_TOKENS": False,  # 若为True, 则刷新后新的refresh_token有更新的有效时间
+    "BLACKLIST_AFTER_ROTATION": True,  # 若为True, 刷新后的token将添加到黑名单中
 
-    "ALGORITHM": "HS256",                # 对称算法: HS256 HS384 HS512  非对称算法: RSA
+    "ALGORITHM": "HS256",  # 对称算法: HS256 HS384 HS512  非对称算法: RSA
     "SIGNING_KEY": SECRET_KEY,
-    "VERIFYING_KEY": None,               # if signing_key, verifying_key will be ignore.
+    "VERIFYING_KEY": None,  # if signing_key, verifying_key will be ignore.
     "AUDIENCE": None,
     "ISSUER": None,
 
-    "AUTH_HEADER_TYPES": ("Bearer",),           # Authorization: Bearer <token>
-    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",   # if HTTP_X_ACCESS_TOKEN, X_ACCESS_TOKEN: Bearer <token>
-    "USER_ID_FIELD": "id",                      # 使用唯一不变的数据库字段,将包含在生成的令牌中以标识用户
+    "AUTH_HEADER_TYPES": ("Bearer",),  # Authorization: Bearer <token>
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",  # if HTTP_X_ACCESS_TOKEN, X_ACCESS_TOKEN: Bearer <token>
+    "USER_ID_FIELD": "id",  # 使用唯一不变的数据库字段,将包含在生成的令牌中以标识用户
     "USER_ID_CLAIM": "user_id",
 }
 
