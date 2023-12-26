@@ -1,6 +1,8 @@
 import os
 import random
 import re
+import time
+
 from django.http import FileResponse
 from rest_framework import status, mixins
 from rest_framework.request import Request
@@ -103,6 +105,146 @@ class UserView(GenericViewSet, mixins.RetrieveModelMixin):
         ser.is_valid(raise_exception=True)
         ser.save()
         return Response({'url': ser.data['avatar']})
+
+    def bind_mobile(self, request, *args, **kwargs):
+        """绑定手机号"""
+        code = request.data.get('code')
+        codeID = request.data.get('codeID')
+        mobile = request.data.get('mobile')
+        # 校验参数
+        result = self.verif_code(code, codeID, mobile)
+        if result:
+            return Response(result, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        # 3、校验手机号
+        if User.objects.filter(mobile=mobile).exists():
+            return Response({'message': '该手机号已被用户绑定'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        # 绑定手机号
+        user = request.user
+        print(user.mobile)
+        print(user.id)
+        print(user.username)
+        user.mobile = mobile
+        user.save()
+
+        return Response({"message": "绑定手机号"}, status=status.HTTP_200_OK)
+
+    def unbind_mobile(self, request, *args, **kwargs):
+        """解绑手机号"""
+        # 1、获取参数
+        code = request.data.get('code')  # 获取验证码
+        codeID = request.data.get('codeID')  # 获取验证码的ID
+        mobile = request.data.get('mobile')  # 获取手机号
+
+        # 2、校验参数
+        result = self.verif_code(code, codeID, mobile)
+        if result:
+            return Response(result, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+        # 3、解绑手机
+        user = request.user
+        print(user.mobile)
+        print(user.id)
+        print(user.username)
+        if user.mobile == mobile:
+            user.mobile = ''
+            user.save()
+            return Response({'massage:': '解绑手机号成功'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': '当前用户绑定的不是该号码'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+    def update_name(self, request, *args, **kwargs):
+        """修改用户昵称"""
+        # 获取参数
+        last_name = request.data.get('last_name')
+        # 校验参数
+        if not last_name:
+            return Response({'error': '参数last_name为必传字段'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        # 修改用户名
+        user = self.get_object()
+        user.last_name = last_name
+        user.save()
+        return Response({'message': '修改昵称成功'}, status=status.HTTP_200_OK)
+
+    def update_email(self, request, *args, **kwargs):
+        """修改用户邮箱的视图"""
+        # 1、获取参数
+        email = request.data.get('email')
+        user = self.get_object()
+        # 2、校验参数
+        # 参数不能为空
+        if not email:
+            return Response({'error': '邮箱不能为空'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        # 校验邮箱格式
+        if not re.match('^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$', email):
+            return Response({'error': '邮箱格式不正确'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        # 邮箱地址和之前是否相同
+        if user.email == email:
+            return Response({'message': 'OK'}, status=status.HTTP_200_OK)
+        # 邮箱是否已被绑定
+        if User.objects.filter(email=email).exists():
+            return Response({'error': '邮箱已被其他用户绑定'})
+        # 3、修改邮箱
+        user.email = email
+        user.save()
+        return Response({'message:': 'OK'})
+
+    def update_password(self, request, *args, **kwargs):
+        """修改密码视图"""
+        # 1、获取参数
+        user = self.get_object()
+        code = request.data.get('code')
+        codeID = request.data.get('codeID')
+        mobile = request.data.get('mobile')
+        password = request.data.get('password')
+        password_confirmation = request.data.get('password_confirmation')
+        # 2、校验参数
+        result = self.verif_code(code, codeID, mobile)
+        if result:
+            return Response(result, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        if user.mobile != mobile:
+            return Response({'error': '验证码有误'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        # 3、校验密码
+        if not password:
+            return Response({'error': '密码不能为空'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        if 6 >= len(password) or len(password) >= 18:
+            return Response({'error': '密码长度需要在6到18位之间'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        if password != password_confirmation:
+            return Response({'error': '两次输入密码不一致'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        # 4、修改密码
+        user.set_password(password)
+        user.save()
+        return Response({'massage': '密码修改成功'}, status=status.HTTP_200_OK)
+
+    @staticmethod
+    def verif_code(code, codeID, mobile):
+        """
+        :param code: 验证码
+        :param codeID: 验证码ID
+        :param mobile: 手机号
+        :return: 通过返回None,失败返回Response
+        """
+        """验证码校验通用函数"""
+        # 1、校验参数
+        if not code:
+            return {'error': '验证码不能为空'}
+        if not codeID:
+            return {'error': '验证码ID不能为空'}
+        if not mobile:
+            return {'error': '手机号不能为空'}
+
+        # 2、校验验证码
+        if VerifCode.objects.filter(id=codeID, code=code, mobile=mobile).exists():
+            # 校验验证码是否过期(过期时间三分钟)
+            c_obj = VerifCode.objects.get(id=codeID, code=code, mobile=mobile)
+            # 获取创建时间的时间戳
+            ct = c_obj.create_time.timestamp()
+            # 获取当前时间的时间戳
+            et = time.time()
+            # 删除验证码(避免出现用户在有效期内,使用同一个验证码重复验证)
+            if ct + 10000 < et:
+                return {"error": "验证码已过期"}
+        else:
+            return {'error': '无效验证码'}
 
 
 class FileView(APIView):
