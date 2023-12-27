@@ -13,6 +13,7 @@ class User(AbstractUser):
     class Mate:
         db_table = 'users'
         verbose_name = '用户表'
+        verbose_name_plural = verbose_name
 
 
 class Addr(models.Model):
@@ -22,13 +23,14 @@ class Addr(models.Model):
     name = models.CharField(verbose_name='联系人', max_length=20)
     province = models.CharField(verbose_name='省份', max_length=20)
     city = models.CharField(verbose_name='城市', max_length=20)
-    counnty = models.CharField(verbose_name='区县', max_length=20)
+    county = models.CharField(verbose_name='区县', max_length=20)
     address = models.CharField(verbose_name='详细地址', max_length=100)
     is_default = models.BooleanField(verbose_name="是否为默认地址", default=False)
 
     class Meta:
         db_table = 'addr'
         verbose_name = '收货地址表'
+        verbose_name_plural = verbose_name
 
 
 class Area(models.Model):
@@ -40,6 +42,7 @@ class Area(models.Model):
     class Meta:
         db_table = 'area'
         verbose_name = '地区表'
+        verbose_name_plural = verbose_name
 
 
 class VerifCode(models.Model):
@@ -51,5 +54,6 @@ class VerifCode(models.Model):
     class Meta:
         db_table = 'verifcode'
         verbose_name = '手机验证码表'
+        verbose_name_plural = verbose_name
 
 
