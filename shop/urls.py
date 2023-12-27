@@ -5,7 +5,11 @@ from users.views import FileView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    re_path(r'file/image/(.+?)/',FileView.as_view()),
+    # 获取图片资源接口
+    re_path(r'file/image/(.+?)/', FileView.as_view()),
+    # 用户模块接口
     path('api/user/', include('users.urls')),
+    # 商品模块接口
+    path('api/goods/', include('goods.urls'))
 
 ]

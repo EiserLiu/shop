@@ -10,7 +10,7 @@ class User(AbstractUser):
     mobile = models.CharField(verbose_name='手机号', default='', max_length=11)
     avatar = models.ImageField(verbose_name='用户头像', blank=True, null=True)
 
-    class Mate:
+    class Meta:
         db_table = 'users'
         verbose_name = '用户表'
         verbose_name_plural = verbose_name
