@@ -10,6 +10,8 @@ urlpatterns = [
     # 用户模块接口
     path('api/user/', include('users.urls')),
     # 商品模块接口
-    path('api/goods/', include('goods.urls'))
+    path('api/goods/', include('goods.urls')),
+    # 购物车模块接口
+    path('api/cart/', include('cart.urls'))
 
 ]

@@ -4,9 +4,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ReadOnlyModelViewSet, GenericViewSet
 
-from goods.models import Goods, GoodsGroup, GoodsBanner, Collect
+from goods.models import Goods, GoodsGroup, GoodsBanner, Collect, Detail
 from goods.permissions import CollectPermission
-from goods.serializers import GoodSerializer, GoodsGroupSerializer, GoodsBannerSerializer, CollectSerializer
+from goods.serializers import GoodSerializer, GoodsGroupSerializer, GoodsBannerSerializer, CollectSerializer, \
+    DetailSerializer
 
 """
 商品模块前台接口
@@ -31,13 +32,14 @@ class IndexView(APIView):
     def get(self, request):
         # 获取商品分类信息
         group = GoodsGroup.objects.filter(status=True)
-        group_ser = GoodsGroupSerializer(group, many=True)
+        # 序列化如果有图片字段,返回数据需要补全完整的图片获取域名,需要在序列化时传入请求对象
+        group_ser = GoodsGroupSerializer(group, many=True, context={'request': request})
         # 获取商品的海报
         banner = GoodsBanner.objects.filter(status=True)
         banner_ser = GoodsBannerSerializer(banner, many=True)
         # 获取所有的推荐商品
         goods = Goods.objects.filter(recommend=True)
-        goods_ser = GoodSerializer(goods, many=True)
+        goods_ser = GoodSerializer(goods, many=True, context={'request': request})
         result = dict(
             group=group_ser.data,
             banner=banner_ser.data,
@@ -59,6 +61,16 @@ class GoodsView(ReadOnlyModelViewSet):
     filterset_fields = ('group', 'recommend')
     # 实现通过价格、销量排序
     ordering_fields = ('sales', 'price')
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        # 获取商品详情
+        detail = Detail.objects.get(goods=instance)
+        detail_ser = DetailSerializer(detail)
+        result = serializer.data
+        result['detail'] = detail_ser.data
+        return Response(result)
 
 
 class CollectView(mixins.CreateModelMixin,
@@ -92,3 +104,11 @@ class CollectView(mixins.CreateModelMixin,
         queryset = queryset.filter(user=request.user)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class GoodsGroupView(mixins.ListModelMixin, GenericViewSet):
+    """商品分类序列化器"""
+    queryset = GoodsGroup.objects.filter(status=True)
+    serializer_class = GoodsGroupSerializer
+
+

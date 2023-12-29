@@ -52,9 +52,6 @@ class Detail(BaseModel):
         verbose_name = '商品详情'
         verbose_name_plural = verbose_name
 
-    def __str__(self):
-        return self.goods
-
 
 class GoodsBanner(BaseModel):
     """商品轮播图"""

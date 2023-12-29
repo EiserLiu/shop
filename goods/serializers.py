@@ -42,4 +42,4 @@ class DetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Detail
-        fields = "__all__"
+        fields = ['producer', 'norms', 'details']
