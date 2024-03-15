@@ -110,5 +110,3 @@ class GoodsGroupView(mixins.ListModelMixin, GenericViewSet):
     """商品分类序列化器"""
     queryset = GoodsGroup.objects.filter(status=True)
     serializer_class = GoodsGroupSerializer
-
-

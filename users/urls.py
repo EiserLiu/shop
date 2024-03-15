@@ -53,4 +53,5 @@ urlpatterns = [
     path('<int:pk>/password/', views.UserView.as_view({
         "put": "update_password"
     })),
+
 ]

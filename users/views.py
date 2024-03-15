@@ -1,27 +1,30 @@
 import os
 import random
 import re
-import time
 
+import redis
 from django.http import FileResponse
 from rest_framework import status, mixins
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
-from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
-from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from common.aliyun_message import AliyunSMS
 from shop.settings import MEDIA_ROOT
-from users.models import User, Addr, VerifCode
+from users.models import User, Addr
 from .permissions import UserPermission, AddrPermission
 from .serializers import UserSerializer, AddrSerializers
-from rest_framework.permissions import IsAuthenticated
-
 
 # Create your views here.
+
+throttle_classes = [AnonRateThrottle]
+POOL = redis.ConnectionPool(host='127.0.0.1', port=6379, max_connections=100)  # 建立连接池
+
 
 class RegisterView(APIView):
 
@@ -69,7 +72,6 @@ class RegisterView(APIView):
 class LoginView(TokenObtainPairView):
     def post(self, request: Request, *args, **kwargs) -> Response:
         serializer = self.get_serializer(data=request.data)
-
         try:
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
@@ -81,7 +83,7 @@ class LoginView(TokenObtainPairView):
         result['email'] = serializer.user.email
         result['mobile'] = serializer.user.mobile
         result['token'] = result.pop('access')
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+        return Response(result, status=status.HTTP_200_OK)
 
 
 class UserView(GenericViewSet, mixins.RetrieveModelMixin):
@@ -109,10 +111,9 @@ class UserView(GenericViewSet, mixins.RetrieveModelMixin):
     def bind_mobile(self, request, *args, **kwargs):
         """绑定手机号"""
         code = request.data.get('code')
-        codeID = request.data.get('codeID')
         mobile = request.data.get('mobile')
         # 校验参数
-        result = self.verif_code(code, codeID, mobile)
+        result = self.verif_code(code, mobile)
         if result:
             return Response(result, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         # 3、校验手机号
@@ -132,11 +133,10 @@ class UserView(GenericViewSet, mixins.RetrieveModelMixin):
         """解绑手机号"""
         # 1、获取参数
         code = request.data.get('code')  # 获取验证码
-        codeID = request.data.get('codeID')  # 获取验证码的ID
         mobile = request.data.get('mobile')  # 获取手机号
 
         # 2、校验参数
-        result = self.verif_code(code, codeID, mobile)
+        result = self.verif_code(code, mobile)
         if result:
             return Response(result, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
@@ -193,12 +193,11 @@ class UserView(GenericViewSet, mixins.RetrieveModelMixin):
         # 1、获取参数
         user = self.get_object()
         code = request.data.get('code')
-        codeID = request.data.get('codeID')
         mobile = request.data.get('mobile')
         password = request.data.get('password')
         password_confirmation = request.data.get('password_confirmation')
         # 2、校验参数
-        result = self.verif_code(code, codeID, mobile)
+        result = self.verif_code(code, mobile)
         if result:
             return Response(result, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         if user.mobile != mobile:
@@ -216,35 +215,34 @@ class UserView(GenericViewSet, mixins.RetrieveModelMixin):
         return Response({'massage': '密码修改成功'}, status=status.HTTP_200_OK)
 
     @staticmethod
-    def verif_code(code, codeID, mobile):
+    def verif_code(code, mobile):
         """
         :param code: 验证码
-        :param codeID: 验证码ID
         :param mobile: 手机号
-        :return: 通过返回None,失败返回Response
+        :return: 通过返回 None，失败返回 Response
         """
-        """验证码校验通用函数"""
         # 1、校验参数
         if not code:
             return {'error': '验证码不能为空'}
-        if not codeID:
-            return {'error': '验证码ID不能为空'}
         if not mobile:
             return {'error': '手机号不能为空'}
 
         # 2、校验验证码
-        if VerifCode.objects.filter(id=codeID, code=code, mobile=mobile).exists():
-            # 校验验证码是否过期(过期时间三分钟)
-            c_obj = VerifCode.objects.get(id=codeID, code=code, mobile=mobile)
-            # 获取创建时间的时间戳
-            ct = c_obj.create_time.timestamp()
-            # 获取当前时间的时间戳
-            et = time.time()
-            # 删除验证码(避免出现用户在有效期内,使用同一个验证码重复验证)
-            if ct + 10000 < et:
-                return {"error": "验证码已过期"}
-        else:
+        conn = redis.Redis(connection_pool=POOL)
+        key = f"verif_code:{mobile}"
+
+        stored_code = conn.get(key)
+        if stored_code is None:
             return {'error': '无效验证码'}
+
+        stored_code = stored_code.decode('utf-8')  # 解码 bytes 为字符串
+        if stored_code != code:
+            return {'error': '验证码错误'}
+
+        # 删除 Redis 中的验证码
+        conn.delete(key)
+
+        return None
 
 
 class FileView(APIView):
@@ -291,7 +289,6 @@ class AddrView(GenericViewSet,
 
 class SendSMSView(APIView):
     """发送短信验证码"""
-    throttle_classes = [AnonRateThrottle]
 
     def post(self, request):
         # 获取手机号码
@@ -306,8 +303,9 @@ class SendSMSView(APIView):
         result = AliyunSMS().send(mobile=mobile, code=code)
         if result['code'] == 'OK':
             # 将短信验证码入库
-            obj = VerifCode.objects.create(mobile=mobile, code=code)
-            result['codeID'] = obj.id
+            conn = redis.Redis(connection_pool=POOL)
+            conn.set(name=mobile, value=code, ex=60 * 5)
+
             return Response(result, status=status.HTTP_200_OK)
         else:
             return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

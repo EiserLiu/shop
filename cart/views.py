@@ -9,8 +9,6 @@ from cart.permissions import CartPermission
 from cart.serializers import CartSerializer, ReadCartSerializer
 
 
-# Create your views here.
-
 class CartView(mixins.CreateModelMixin,
                mixins.UpdateModelMixin,
                mixins.DestroyModelMixin,
