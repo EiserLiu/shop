@@ -304,8 +304,7 @@ class SendSMSView(APIView):
         if result['code'] == 'OK':
             # 将短信验证码入库
             conn = redis.Redis(connection_pool=POOL)
-            conn.set(name=mobile, value=code, ex=60 * 5)
-
+            conn.setex(name=mobile, time=60 * 5, value=code)
             return Response(result, status=status.HTTP_200_OK)
         else:
             return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
