@@ -8,6 +8,7 @@ from goods.models import Goods, GoodsGroup, GoodsBanner, Collect, Detail
 from goods.permissions import CollectPermission
 from goods.serializers import GoodSerializer, GoodsGroupSerializer, GoodsBannerSerializer, CollectSerializer, \
     DetailSerializer
+from common.recommend import PPR
 
 """
 商品模块前台接口
@@ -110,3 +111,15 @@ class GoodsGroupView(mixins.ListModelMixin, GenericViewSet):
     """商品分类序列化器"""
     queryset = GoodsGroup.objects.filter(status=True)
     serializer_class = GoodsGroupSerializer
+
+# class GoodsRecommendView(mixins.ListModelMixin, GenericViewSet):
+#     """推荐商品序列化器"""
+#     serializer_class = GoodSerializer
+#     queryset = Collect.objects.all()
+#     permission_classes = [IsAuthenticated, CollectPermission]
+#
+#     def list(self, request, *args, **kwargs):
+#         queryset = self.filter_queryset(self.get_queryset())
+#         queryset = queryset.filter(user=request.user)
+#         print(queryset)
+#         return Response({"queryset": queryset})

@@ -26,5 +26,9 @@ urlpatterns = [
     path('group/', views.GoodsGroupView.as_view({
         "get": "list"
     })),
+    # # 获取推荐商品
+    # path('recommend/', views.GoodsRecommendView.as_view({
+    #     'get': 'list'  # 个性化推荐
+    # }))
 
 ]
