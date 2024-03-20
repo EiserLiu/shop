@@ -63,4 +63,10 @@ class AliyunSMS:
 
 
 if __name__ == '__main__':
-    AliyunSMS().send(mobile='17692275126', code='12138')
+    # AliyunSMS().send(mobile='17692275126', code='12138')
+    import os
+
+    # 获取当前工作目录的路径
+    current_working_directory = os.getcwd()
+    # 打印当前工作目录的路径
+    print(current_working_directory)

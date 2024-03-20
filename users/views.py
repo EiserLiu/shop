@@ -1,5 +1,4 @@
 import os
-import random
 import re
 
 import redis
@@ -14,7 +13,7 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from common.aliyun_message import AliyunSMS
+from users.tasks import POOL, send_code
 from shop.settings import MEDIA_ROOT
 from users.models import User, Addr
 from .permissions import UserPermission, AddrPermission
@@ -23,7 +22,9 @@ from .serializers import UserSerializer, AddrSerializers
 # Create your views here.
 
 throttle_classes = [AnonRateThrottle]
-POOL = redis.ConnectionPool(host='127.0.0.1', port=6379, max_connections=100)  # 建立连接池
+
+
+# POOL = redis.ConnectionPool(host='127.0.0.1', port=6379, max_connections=100)  # 建立连接池
 
 
 class RegisterView(APIView):
@@ -297,24 +298,13 @@ class SendSMSView(APIView):
         res = re.match(r"^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}$", mobile)
         if not res:
             return Response({'error': '无效的手机号码'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-        # 随机生成一个6位数的验证码
-        code = self.get_random_code()
-        # 发送短信验证码
-        result = AliyunSMS().send(mobile=mobile, code=code)
+        result, code = send_code(mobile)
         if result['code'] == 'OK':
             # 将短信验证码入库
             conn = redis.Redis(connection_pool=POOL)
             conn.setex(name=mobile, time=60 * 5, value=code)
+            key = conn.get(name=mobile)
+            result['key'] = key
             return Response(result, status=status.HTTP_200_OK)
         else:
             return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    def get_random_code(self):
-        # 随机生成一个6位数的验证码
-        # code2 = ''.join([random.choice(range(10)) for i in range(6)])
-        code = ''
-        for i in range(6):
-            # 随机生成0-9之间的一个数据
-            n = random.choice(range(10))
-            code += str(n)
-        return code
