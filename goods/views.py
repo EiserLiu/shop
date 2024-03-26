@@ -28,8 +28,6 @@ from goods.serializers import GoodSerializer, GoodsGroupSerializer, GoodsBannerS
     支持分类获取(过滤参数:)
     获取推荐的商品
     根据商品的销量排序、根据价格排序
-    
-    
 4、收藏商品(取消)
 """
 

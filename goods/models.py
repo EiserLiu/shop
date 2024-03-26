@@ -3,7 +3,7 @@ from django.db import models
 from common.db import BaseModel
 
 
-class GoodsGroup(models.Model):
+class GoodsGroup(BaseModel):
     """商品分类表"""
     name = models.CharField(verbose_name="分类名称", help_text="名称", max_length=20)
     image = models.ImageField(verbose_name="分类图标", help_text="图标")
@@ -69,7 +69,7 @@ class GoodsBanner(BaseModel):
         return self.title
 
 
-class Collect(models.Model):
+class Collect(BaseModel):
     """收藏的商品"""
     user = models.ForeignKey('users.User', help_text='用户ID', verbose_name='用户ID', on_delete=models.CASCADE)
     goods = models.ForeignKey('goods.Goods', help_text='商品ID', verbose_name='商品ID', on_delete=models.CASCADE)
