@@ -43,3 +43,11 @@ class DetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Detail
         fields = ['producer', 'norms', 'details']
+
+
+class GoodImagesSerializer(serializers.ModelSerializer):
+    """商品图片序列化器"""
+
+    class Meta:
+        model = Goods
+        fields = ['cover']

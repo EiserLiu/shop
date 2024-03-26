@@ -1,4 +1,12 @@
-from rest_framework import mixins
+import base64
+import io
+import re
+
+import numpy as np
+from PIL import Image
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.db.models.fields.files import ImageFieldFile
+from rest_framework import mixins, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,8 +15,7 @@ from rest_framework.viewsets import ReadOnlyModelViewSet, GenericViewSet
 from goods.models import Goods, GoodsGroup, GoodsBanner, Collect, Detail
 from goods.permissions import CollectPermission
 from goods.serializers import GoodSerializer, GoodsGroupSerializer, GoodsBannerSerializer, CollectSerializer, \
-    DetailSerializer
-from common.recommend import PPR
+    DetailSerializer, GoodImagesSerializer
 
 """
 商品模块前台接口
@@ -112,14 +119,63 @@ class GoodsGroupView(mixins.ListModelMixin, GenericViewSet):
     queryset = GoodsGroup.objects.filter(status=True)
     serializer_class = GoodsGroupSerializer
 
-# class GoodsRecommendView(mixins.ListModelMixin, GenericViewSet):
-#     """推荐商品序列化器"""
-#     serializer_class = GoodSerializer
-#     queryset = Collect.objects.all()
-#     permission_classes = [IsAuthenticated, CollectPermission]
-#
-#     def list(self, request, *args, **kwargs):
-#         queryset = self.filter_queryset(self.get_queryset())
-#         queryset = queryset.filter(user=request.user)
-#         print(queryset)
-#         return Response({"queryset": queryset})
+
+class SimilarImagesView(GenericViewSet):
+    """相似商品图片查询"""
+    queryset = Goods.objects.filter(is_on=True)
+    serializer_class = GoodImagesSerializer
+
+    def similarimages(self, request):
+        req_image = request.data.get("cover")
+
+        if not req_image:
+            return Response({"error": "No image data provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            req_image_obj = self._process_image_data(req_image)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        similar_list = []
+        goods_list = self.get_queryset()
+
+        for good in goods_list:
+            res_image = good.cover
+            try:
+                res_image_obj = self._process_image_field(res_image)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+            similarity = self._compute_image_similarity(req_image_obj, res_image_obj)
+            if similarity > 0.1:  # 假设相似度阈值是0.1
+                similar_list.append(good)
+
+        serializer = GoodSerializer(similar_list, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def _process_image_data(self, image_data):
+        if isinstance(image_data, InMemoryUploadedFile):
+            image_content = image_data.read()
+        elif isinstance(image_data, str) and image_data.startswith('data:image'):
+            base64_data = re.search(r'data:image[^;]+;base64,([a-zA-Z0-9+/=]+)', image_data).group(1)
+            image_content = base64.b64decode(base64_data)
+        else:
+            raise ValueError("Invalid image data for req_image")
+
+        return Image.open(io.BytesIO(image_content))
+
+    def _process_image_field(self, image_field):
+        if isinstance(image_field, ImageFieldFile):
+            return Image.open(io.BytesIO(image_field.read()))
+        else:
+            return image_field
+
+    def _compute_image_similarity(self, img1, img2):
+        if img1.size != img2.size:
+            img1 = img1.resize(img2.size)
+
+        h1 = np.array(img1.histogram())
+        h2 = np.array(img2.histogram())
+        rms = np.sqrt(np.mean((h1 - h2) ** 2))
+        similarity = 1 - rms / np.sqrt(np.mean(h1 ** 2) * np.mean(h2 ** 2))
+        return similarity

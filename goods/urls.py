@@ -26,6 +26,10 @@ urlpatterns = [
     path('group/', views.GoodsGroupView.as_view({
         "get": "list"
     })),
+    # 相似商品查询
+    path('similarimages/', views.SimilarImagesView.as_view({
+        "post": "similarimages"
+    })),
     # # 获取推荐商品
     # path('recommend/', views.GoodsRecommendView.as_view({
     #     'get': 'list'  # 个性化推荐

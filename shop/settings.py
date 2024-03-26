@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'order',
     'users',
     'ckeditor',
+    'history',
 ]
 
 MIDDLEWARE = [
@@ -93,7 +94,16 @@ DATABASES = {
         "PASSWORD": "123456",
         "PORT": 3306,
         "HOST": "localhost"
-    }
+    },
+    # 'mongodb': {
+    #     'ENGINE': 'django.db.backends.mongodb',
+    #     'NAME': 'shop',
+    #     'CLIENT': {
+    #         'host': 'localhost',
+    #         'port': 27017,
+    #         # 如果需要认证，可以添加 'username': 'your_username', 'password': 'your_password'
+    #     }
+    # }
 }
 
 # Password validation
