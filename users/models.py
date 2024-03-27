@@ -15,6 +15,9 @@ class User(AbstractUser, BaseModel):
         verbose_name = '用户表'
         verbose_name_plural = verbose_name
 
+    def __str__(self):
+        return self.username
+
 
 class Addr(models.Model):
     """收货地址表"""

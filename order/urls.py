@@ -1,7 +1,9 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 from . import views
 
 urlpatterns = [
-
+    path('order/', views.OrderView.as_view({
+        'post': 'create',
+        'get': 'list'
+    }))
 ]

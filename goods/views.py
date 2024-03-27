@@ -51,6 +51,9 @@ class IndexView(APIView):
             banner=banner_ser.data,
             goods=goods_ser.data
         )
+        print(group_ser)
+        print("---------------------------------------------------------------------------------------------------")
+        print(group_ser.data)
 
         return Response(result)
 
