@@ -1,9 +1,11 @@
 import base64
 import io
 import re
+import asyncio
 
 import numpy as np
 from PIL import Image
+from asgiref.sync import async_to_sync
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db.models.fields.files import ImageFieldFile
 from rest_framework import mixins, status
@@ -51,9 +53,6 @@ class IndexView(APIView):
             banner=banner_ser.data,
             goods=goods_ser.data
         )
-        print(group_ser)
-        print("---------------------------------------------------------------------------------------------------")
-        print(group_ser.data)
 
         return Response(result)
 
@@ -116,7 +115,7 @@ class CollectView(mixins.CreateModelMixin,
 
 
 class GoodsGroupView(mixins.ListModelMixin, GenericViewSet):
-    """商品分类序列化器"""
+    """商品分类视图"""
     queryset = GoodsGroup.objects.filter(status=True)
     serializer_class = GoodsGroupSerializer
 

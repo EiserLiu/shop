@@ -1,6 +1,6 @@
 from goods.models import Collect
 from users.models import User
-from .hashmap import hashmap
+from .map_reduce import hashmap
 
 
 def PPR(id):

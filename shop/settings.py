@@ -13,9 +13,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 
-# celery配置
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/9"
-CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/10"
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -106,6 +103,16 @@ DATABASES = {
     # }
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -194,3 +201,9 @@ AUTHENTICATION_BACKENDS = [
 MEDIA_ROOT = BASE_DIR / 'file/image'
 # 指定文件获取URL的路径
 MEDIA_URL = 'file/image/'
+
+# celery配置
+CELERY_BROKER_URL = "redis://127.0.0.1:6379"
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379"
+CELERY_TASK_SERIALIZER = 'json'

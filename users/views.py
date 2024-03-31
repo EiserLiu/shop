@@ -1,4 +1,5 @@
 import os
+import random
 import re
 
 import redis
@@ -22,9 +23,6 @@ from .serializers import UserSerializer, AddrSerializers
 # Create your views here.
 
 throttle_classes = [AnonRateThrottle]
-
-
-# POOL = redis.ConnectionPool(host='127.0.0.1', port=6379, max_connections=100)  # 建立连接池
 
 
 class RegisterView(APIView):
@@ -292,19 +290,17 @@ class SendSMSView(APIView):
     """发送短信验证码"""
 
     def post(self, request):
+        # 随机生成一个6位数的验证码
+        code = random.randrange(100000, 999999)
         # 获取手机号码
         mobile = request.data.get('mobile')
         # 验证手机号码格式是否正确(正则表达式)
         res = re.match(r"^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}$", mobile)
         if not res:
             return Response({'error': '无效的手机号码'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-        result, code = send_code(mobile)
-        if result['code'] == 'OK':
-            # 将短信验证码入库
-            conn = redis.Redis(connection_pool=POOL)
-            conn.setex(name=mobile, time=60 * 5, value=code)
-            key = conn.get(name=mobile)
-            result['key'] = key
-            return Response(result, status=status.HTTP_200_OK)
-        else:
-            return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # 发送短信验证码的异步任务
+        async_result = send_code.delay(mobile, code)
+
+        # 返回任务的ID，客户端可以使用这个ID来查询任务的状态和结果
+        return Response({'task_id': async_result.id}, status=status.HTTP_202_ACCEPTED)

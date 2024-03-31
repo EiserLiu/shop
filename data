@@ -1,0 +1,8 @@
+1. 生成迁移文件
+python manage.py makemigrations
+2. 同步到数据库中
+python manage.py migrate
+3. 从数据库同步到ORM
+python manage.py inspectdb > myapp\models.py
+4. 启动Celery
+celery -A users.tasks worker -l info 

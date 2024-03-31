@@ -31,7 +31,7 @@ class AliyunSMS:
         self.config = Config(
             access_key_id=self.access_key_id,
             access_key_secret=self.access_key_secret,
-            endpoint=f'dysmsapi.aliyuncs.com'
+            endpoint=self.endpoint
         )
 
     def send(self, mobile: str, code: str):
@@ -59,14 +59,15 @@ class AliyunSMS:
             else:
                 return {"cede": "NO", "error": res.body.message}
         except Exception as e:
-            return {'code': 'NO', 'error': '短信发送失败'}
+            return {'code': 'NO', 'message': '短信发送失败', 'error': e}
 
 
 if __name__ == '__main__':
-    # AliyunSMS().send(mobile='17692275126', code='12138')
-    import os
+    result = AliyunSMS().send(mobile='17692275126', code='12138')
+    print(result)
+    # import os
 
     # 获取当前工作目录的路径
-    current_working_directory = os.getcwd()
+    # current_working_directory = os.getcwd()
     # 打印当前工作目录的路径
-    print(current_working_directory)
+    # print(current_working_directory)
