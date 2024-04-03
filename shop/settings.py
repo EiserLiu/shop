@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'users',
     'ckeditor',
     'history',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -155,6 +156,7 @@ AUTH_USER_MODEL = 'users.User'
 
 # DEF的配置
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
     # 配置登录鉴权方式
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
