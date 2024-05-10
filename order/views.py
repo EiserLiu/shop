@@ -9,6 +9,7 @@ from goods.models import Goods
 from goods.permissions import CollectPermission
 from .models import Order
 from .serializers import OrderSerializers
+from shop.enums import OrderStatus
 
 
 class OrderView(mixins.CreateModelMixin,
@@ -39,13 +40,15 @@ class OrderView(mixins.CreateModelMixin,
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def set_status(self, request, *args, **kwargs):
+        status_value = request.data.get('status')
         try:
             order_id = request.data.get('id')
             if not order_id:
                 return Response({"error": "订单ID未提供"}, status=status.HTTP_400_BAD_REQUEST)
 
             order = Order.objects.get(id=order_id)
-            order.status = not order.status  # 切换状态
+            if status_value in [statu.value for statu in OrderStatus]:
+                order.status = status_value
             order.save()  # 保存更改
             return Response({"message": "状态修改成功"}, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
