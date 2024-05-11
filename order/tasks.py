@@ -12,7 +12,7 @@ def send_order_status():
         send_mail(
             '您的订单状态信息',
             f'您的订单状态{order.id} has been shipped.',
-            'from@example.com',
-            [order.customer_email],
+            '1071519731@qq.com',
+            [order.user.email],
             fail_silently=False,
         )

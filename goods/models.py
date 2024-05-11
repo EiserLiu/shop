@@ -72,7 +72,7 @@ class GoodsBanner(BaseModel):
 class Collect(BaseModel):
     """收藏的商品"""
     user = models.ForeignKey('users.User', help_text='用户ID', verbose_name='用户ID', on_delete=models.CASCADE)
-    goods = models.ForeignKey('goods.Goods', help_text='商品ID', verbose_name='商品ID', on_delete=models.CASCADE)
+    goods = models.ForeignKey('Goods', help_text='商品ID', verbose_name='商品ID', on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'collect'

@@ -227,3 +227,4 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(hour='8', minute='0'),  # 每天早上8点执行
     },
 }
+
