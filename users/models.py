@@ -47,13 +47,14 @@ class Area(models.Model):
         verbose_name = '地区表'
         verbose_name_plural = verbose_name
 
-# class VerifCode(models.Model):
-#     """验证码模型"""
-#     mobile = models.CharField(verbose_name='手机号码', max_length=11)
-#     code = models.CharField(verbose_name='验证码', max_length=6)
-#     create_time = models.DateTimeField(auto_now_add=True, verbose_name='生成时间')
-#
-#     class Meta:
-#         db_table = 'verifcode'
-#         verbose_name = '手机验证码表'
-#         verbose_name_plural = verbose_name
+
+class VerifCode(models.Model):
+    """验证码模型"""
+    mobile = models.CharField(verbose_name='手机号码', max_length=11)
+    code = models.CharField(verbose_name='验证码', max_length=6)
+    create_time = models.DateTimeField(auto_now_add=True, verbose_name='生成时间')
+
+    class Meta:
+        db_table = 'verifcode'
+        verbose_name = '手机验证码表'
+        verbose_name_plural = verbose_name

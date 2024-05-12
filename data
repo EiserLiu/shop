@@ -4,5 +4,13 @@ python manage.py makemigrations
 python manage.py migrate
 3. 从数据库同步到ORM
 python manage.py inspectdb > myapp\models.py
-4. 启动Celery
-celery -A users.tasks worker -l info 
+4. 启动Celery异步任务
+celery -A shop worker -l debug -P eventlet
+5. 启动Celery定时任务
+celery -A shop beat --loglevel=info
+6. 启动Celery日志
+celery -A shop flower
+7. 生成环境配置文件(整个虚拟环境)
+pip freeze > requirements.txt
+8. 生成环境配置文件(当前项目)
+pipreqs ./

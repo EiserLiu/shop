@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'simpleui',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework',
     'django_filters',
+    'django_celery_beat',
     'corsheaders',
     'cart',
     'goods',
@@ -139,7 +141,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
@@ -206,7 +208,8 @@ MEDIA_ROOT = BASE_DIR / 'file/image'
 # 指定文件获取URL的路径
 MEDIA_URL = 'file/image/'
 
-# celery配置
+######################################### celery配置 #########################################
+
 # Broker配置, 使用Redis作为消息中间件
 CELERY_BROKER_URL = "redis://127.0.0.1:6379/1"
 # BACKEND配置, 使用Redis
@@ -221,10 +224,10 @@ CELERY_RESULT_EXPIRES = 60 * 60 * 24
 # 设置时区
 CELERY_TIMEZONE = 'Asia/Shanghai'
 # 设置定时任务
-CELERY_BEAT_SCHEDULE = {
-    'send-order-status-every-day': {
-        'task': 'myapp.tasks.send_order_status',
-        'schedule': crontab(hour='8', minute='0'),  # 每天早上8点执行
-    },
-}
-
+# CELERY_BEAT_SCHEDULE = {
+#     'send-order-status-every-day': {
+#         'task': 'order.tasks.send_order_status',
+#         'schedule': crontab(hour='8', minute='0'),  # 每天早上8点执行
+#     },
+# }
+CELERY_CELERYBEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
