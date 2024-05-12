@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'django_celery_beat',
+    'django_celery_results',
     'corsheaders',
     'cart',
     'goods',
@@ -158,7 +159,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 # 指定自定义用户类
 AUTH_USER_MODEL = 'users.User'
 
-# DEF的配置
+######################################### DEF的配置 #########################################
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
     # 配置登录鉴权方式
@@ -178,7 +179,7 @@ REST_FRAMEWORK = {
     }
 }
 
-# token的相关配置
+######################################### token的相关配置 #########################################
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),  # 访问令牌的有效时间
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # 刷新令牌的有效时间
@@ -212,8 +213,8 @@ MEDIA_URL = 'file/image/'
 
 # Broker配置, 使用Redis作为消息中间件
 CELERY_BROKER_URL = "redis://127.0.0.1:6379/1"
-# BACKEND配置, 使用Redis
-CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/2"
+# BACKEND配置, 使用django ORM
+CELERY_RESULT_BACKEND = 'django-db'
 # 序列化方案
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -224,10 +225,11 @@ CELERY_RESULT_EXPIRES = 60 * 60 * 24
 # 设置时区
 CELERY_TIMEZONE = 'Asia/Shanghai'
 # 设置定时任务
-# CELERY_BEAT_SCHEDULE = {
+# CELERY_BEAT_SCHEDULER = {
 #     'send-order-status-every-day': {
 #         'task': 'order.tasks.send_order_status',
 #         'schedule': crontab(hour='8', minute='0'),  # 每天早上8点执行
 #     },
 # }
-CELERY_CELERYBEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
+CELERY_WORKER_CONNECTION_RETRY_ON_STARTUP = True
