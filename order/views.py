@@ -8,6 +8,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from goods.models import Goods
 from goods.permissions import CollectPermission
+from users.models import User
 from .models import Order
 from .serializers import OrderSerializers
 from shop.enums import OrderStatus
@@ -58,13 +59,24 @@ class OrderView(mixins.CreateModelMixin,
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-class SendEmailView(APIView):
-    """发送短信验证码"""
-
-    def get(self, request):
-        # 发送短信验证码的异步任务
-        async_result = send_order_status.delay()
-
-        # 返回任务的ID，客户端可以使用这个ID来查询任务的状态和结果
-        return Response({'task_id': async_result.id}, status=status.HTTP_202_ACCEPTED)
+# class SendEmailView(APIView):
+#     """发送短信验证码"""
+#
+#     def get(self, request):
+#         orders = Order.objects.filter(status='待处理')
+#         order_users = orders.values_list('user', flat=True)
+#         print(orders)
+#
+#         for order in orders:
+#             print(order)
+#
+#         # 遍历每个订单的用户信息
+#         for user_id in order_users:
+#             # 获取用户对象
+#             user = User.objects.get(id=user_id)
+#             # 打印用户邮箱
+#             print(user.email)
+#         # 发送短信验证码的异步任务
+#         result = send_order_status.delay(orders)
+#         # 返回任务的ID，客户端可以使用这个ID来查询任务的状态和结果
+#         return Response({'message': result.get()}, status=status.HTTP_200_OK)

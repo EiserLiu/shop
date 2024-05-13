@@ -213,8 +213,10 @@ MEDIA_URL = 'file/image/'
 
 # Broker配置, 使用Redis作为消息中间件
 CELERY_BROKER_URL = "redis://127.0.0.1:6379/1"
+# BACKEND配置, 使用redis
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/2'
 # BACKEND配置, 使用django ORM
-CELERY_RESULT_BACKEND = 'django-db'
+# CELERY_RESULT_BACKEND = 'django-db'
 # 序列化方案
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -236,3 +238,15 @@ CELERY_WORKER_CONNECTION_RETRY_ON_STARTUP = True
 # 解决时区问题
 CELERY_ENABLE_UTC = False
 DJANGO_CELERY_BEAT_TZ_AWARE = False
+# worker数
+CELERY_WORKER_CONCURRENCY = 10
+
+######################################### 发送邮件配置配置 #########################################
+EMAIL_HOST = 'smtp.qq.com'
+EMAIL_PORT = 465  # 端口号
+EMAIL_HOST_USER = '1256040887@qq.com'
+EMAIL_HOST_PASSWORD = 'penjyorbigqxjieg'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+EMAIL_USE_SSL = True  # SSL加密
+# EMAIL_USE_TLS = False  # TLS加密

@@ -6,5 +6,5 @@ urlpatterns = [
         'post': 'create',
         'get': 'list'
     })),
-    path('orderstatu/', views.SendEmailView.as_view())
+    # path('orderstatu/', views.SendEmailView.as_view())
 ]
