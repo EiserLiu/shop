@@ -233,3 +233,6 @@ CELERY_TIMEZONE = 'Asia/Shanghai'
 # }
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 CELERY_WORKER_CONNECTION_RETRY_ON_STARTUP = True
+# 解决时区问题
+CELERY_ENABLE_UTC = False
+DJANGO_CELERY_BEAT_TZ_AWARE = False
