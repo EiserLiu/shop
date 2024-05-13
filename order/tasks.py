@@ -17,8 +17,8 @@ class SendEmailTask(Task):
         send_mail('celery监控任务成功', info, settings.EMAIL_HOST_USER, ['1071519731@qq.com'])
 
 
-@shared_task
-def send_order_status():
+@shared_task(base=SendEmailTask, bind=True)
+def send_order_status(self):
     orders = Order.objects.filter(status='待处理')
     for order in orders:
         print(123456)
