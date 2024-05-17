@@ -12,7 +12,7 @@ from users.models import User
 from .models import Order
 from .serializers import OrderSerializers
 from shop.enums import OrderStatus
-from .tasks import send_order_status
+from .tasks import send_order_status, update_stock_and_status
 
 
 class OrderView(mixins.CreateModelMixin,
@@ -27,16 +27,9 @@ class OrderView(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         try:
             instance = super().create(request, *args, **kwargs)
-            good_id = request.data.get('goods')
-            number: int = request.data.get('number')
-            good = Goods.objects.select_for_update().get(id=good_id)
-            if int(good.stock) >= int(number):
-                good.stock -= int(number)
-                good.sales += int(number)
-                good.save()
-                return instance
-            else:
-                return Response({"error": "库存不足"}, status=status.HTTP_400_BAD_REQUEST)
+            # 发送任务来更新库存和状态
+            update_stock_and_status.delay(order_id=instance.id, status_value='PENDING')
+            return instance
         except ObjectDoesNotExist:
             return Response({"error": "商品不存在"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
@@ -51,9 +44,9 @@ class OrderView(mixins.CreateModelMixin,
 
             order = Order.objects.get(id=order_id)
             if status_value in [statu.value for statu in OrderStatus]:
-                order.status = status_value
-            order.save()  # 保存更改
-            return Response({"message": "状态修改成功"}, status=status.HTTP_200_OK)
+                # 发送任务来更新状态
+                update_stock_and_status.delay(order_id, status_value)
+                return Response({"message": "状态修改成功"}, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
             return Response({"error": "订单不存在"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:

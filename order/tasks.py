@@ -1,5 +1,8 @@
 from celery import shared_task, Task
 from django.core.mail import send_mail
+
+from goods.models import Goods
+from shop.enums import OrderStatus
 from .models import Order
 from django.conf import settings
 from shop.celery import app
@@ -18,10 +21,24 @@ class SendEmailTask(Task):
 
 
 @shared_task(base=SendEmailTask, bind=True)
+def update_stock_and_status(self, order_id, status_value):
+    order = Order.objects.get(id=order_id)
+    good = Goods.objects.select_for_update().get(id=order.goods_id)
+    if good.stock >= order.number:
+        good.stock -= order.number
+        good.sales += order.number
+        good.save()
+        order.status = status_value
+        order.save()
+    else:
+        raise ValueError("库存不足")
+
+
+@shared_task(base=SendEmailTask, bind=True)
 def send_order_status(self):
     orders = Order.objects.filter(status='待处理')
     for order in orders:
-        print(123456)
+        print(order)
         send_mail(
             '您的订单状态信息',
             f'您的订单{order}待处理',
