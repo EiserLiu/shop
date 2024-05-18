@@ -14,7 +14,7 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from users.tasks import send_code, task_test
+from users.tasks import send_code
 from shop.settings import MEDIA_ROOT
 from users.models import User, Addr
 from .permissions import UserPermission, AddrPermission
@@ -307,10 +307,3 @@ class SendSMSView(APIView):
         # 返回任务的ID，客户端可以使用这个ID来查询任务的状态和结果
         return Response({'task_id': async_result.id}, status=status.HTTP_202_ACCEPTED)
 
-
-class TestView(APIView):
-    def post(self, request):
-        a = request.data.get('a')
-        b = request.data.get('b')
-        result = task_test.delay(a, b)
-        return Response({'message': result.get()}, status=status.HTTP_200_OK)

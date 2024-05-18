@@ -214,7 +214,7 @@ MEDIA_URL = 'file/image/'
 # Broker配置, 使用Redis作为消息中间件
 # CELERY_BROKER_URL = "redis://127.0.0.1:6379/1"
 # Broker配置, 使用RabbitMQ作为消息中间件
-CELERY_BROKER_URL = "amqp://guest:guest@localhost:5672//"
+CELERY_BROKER_URL = "amqp://guest:guest@localhost:5672"
 
 # BACKEND配置, 使用redis
 CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/2'

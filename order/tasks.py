@@ -1,11 +1,9 @@
 from celery import shared_task, Task
+from django.conf import settings
 from django.core.mail import send_mail
 
 from goods.models import Goods
-from shop.enums import OrderStatus
 from .models import Order
-from django.conf import settings
-from shop.celery import app
 
 
 class SendEmailTask(Task):
