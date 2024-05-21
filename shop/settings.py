@@ -14,6 +14,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from celery.schedules import crontab
+from redis import ConnectionPool
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -246,7 +247,7 @@ DJANGO_CELERY_BEAT_TZ_AWARE = False
 # worker数
 CELERY_WORKER_CONCURRENCY = 10
 
-######################################### 发送邮件配置配置 #########################################
+######################################### 发送邮件配置 #########################################
 EMAIL_HOST = 'smtp.qq.com'
 EMAIL_PORT = 465  # 端口号
 EMAIL_HOST_USER = '1256040887@qq.com'
@@ -255,3 +256,14 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 EMAIL_USE_SSL = True  # SSL加密
 # EMAIL_USE_TLS = False  # TLS加密
+
+######################################### redis配置 #########################################
+
+REDIS_POOL = ConnectionPool(
+    host='127.0.0.1',  # Redis服务器地址
+    port=6379,  # Redis服务器端口
+    db=10,  # 默认数据库索引
+    password=None,  # Redis服务器密码（如果有的话）
+    socket_timeout=2,  # 连接超时时间（秒）
+    socket_keepalive=True,  # 启用TCP保活机制
+)

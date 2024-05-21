@@ -3,6 +3,7 @@ import random
 import re
 
 import redis
+from django.conf import settings
 from django.http import FileResponse
 from rest_framework import status, mixins
 from rest_framework.permissions import IsAuthenticated
@@ -23,8 +24,6 @@ from .serializers import UserSerializer, AddrSerializers
 # Create your views here.
 
 throttle_classes = [AnonRateThrottle]
-
-POOL = redis.ConnectionPool(host='127.0.0.1', port=6379, max_connections=100)  # 建立连接池
 
 
 class RegisterView(APIView):
@@ -229,8 +228,8 @@ class UserView(GenericViewSet, mixins.RetrieveModelMixin):
             return {'error': '手机号不能为空'}
 
         # 2、校验验证码
-        conn = redis.Redis(connection_pool=POOL)
-        key = f"verif_code:{mobile}"
+        conn = redis.Redis(connection_pool=settings.REDIS_POOL)
+        key = mobile
 
         stored_code = conn.get(key)
         if stored_code is None:
