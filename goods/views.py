@@ -9,6 +9,7 @@ from asgiref.sync import async_to_sync
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db.models.fields.files import ImageFieldFile
 from rest_framework import mixins, status
+from rest_framework.decorators import action
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -126,7 +127,19 @@ class SimilarImagesView(GenericViewSet):
     queryset = Goods.objects.filter(is_on=True)
     serializer_class = GoodImagesSerializer
 
+    @action(detail=False, methods=['POST'])
     def similarimages(self, request):
+        """
+        相似商品图片查询
+        ---
+        request_serializer:
+            name: SimilarImagesSerializer
+            fields:
+                - cover: 请求的图片数据，可以是InMemoryUploadedFile对象或者base64编码的字符串
+        response_serializer:
+            name: GoodSerializer
+            many: True
+        """
         req_image = request.data.get("cover")
 
         if not req_image:
@@ -141,7 +154,7 @@ class SimilarImagesView(GenericViewSet):
         goods_list = self.get_queryset()
 
         for good in goods_list:
-            res_image = good.cover
+            res_image = good.cover  # 获取商品的封面图片
             try:
                 res_image_obj = self._process_image_field(res_image)
             except Exception as e:
@@ -155,6 +168,11 @@ class SimilarImagesView(GenericViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def _process_image_data(self, image_data):
+        """
+        处理请求中的图片数据
+        :param image_data: 请求中的图片数据，可以是InMemoryUploadedFile对象或者base64编码的字符串
+        :return: PIL的Image对象
+        """
         if isinstance(image_data, InMemoryUploadedFile):
             image_content = image_data.read()
         elif isinstance(image_data, str) and image_data.startswith('data:image'):
@@ -166,12 +184,23 @@ class SimilarImagesView(GenericViewSet):
         return Image.open(io.BytesIO(image_content))
 
     def _process_image_field(self, image_field):
+        """
+        处理商品模型中的图片字段
+        :param image_field: 商品模型中的图片字段，可能是InMemoryUploadedFile对象或者字符串
+        :return: PIL的Image对象
+        """
         if isinstance(image_field, ImageFieldFile):
             return Image.open(io.BytesIO(image_field.read()))
         else:
             return image_field
 
     def _compute_image_similarity(self, img1, img2):
+        """
+        计算两张图片的相似度
+        :param img1: PIL的Image对象
+        :param img2: PIL的Image对象
+        :return: 相似度，范围是0到1
+        """
         if img1.size != img2.size:
             img1 = img1.resize(img2.size)
 
