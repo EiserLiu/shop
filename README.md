@@ -120,9 +120,9 @@ python manage.py runserver
 
 嫌麻烦就在编辑一个形参运行
 
-![image-20240625161255823](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20240625161330001.png)
+![](D:\桌面\Snipaste_2024-06-25_20-16-57.jpg)
 
-![image-20240625161357173](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20240625161357173.png)
+![Snipaste_2024-06-25_20-17-20](D:\桌面\Snipaste_2024-06-25_20-17-20.jpg)
 
 8000为端口号
 
